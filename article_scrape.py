@@ -1,8 +1,8 @@
 """
 
 """
-import sys, csv, requests, re
-# import numpy as np
+import sys, csv, re
+import requests
 from bs4 import BeautifulSoup
 
 
@@ -51,6 +51,7 @@ class ArticleScraper():
         for article in self.articles:
             try:
                 content = self.get_article_content(article)
+                article_frequencies = self.get_keywords_frequencies_from_article(content)
             except ValueError as e:
                 print(f'\nCannot parse article {article}:')
                 print(e)
@@ -75,14 +76,14 @@ class ArticleScraper():
             paragraphs = body.find_all('p')
 
             article_paragraphs = [paragraph.get_text() for paragraph in paragraphs]
-            return(" ".join(article_paragraphs))
+            return(" ".join(article_paragraphs).lower())
 
-    def get_keywords_frequencies_from_article(self, content) -> int:
-        pass
-
-
-
-
-
+    def get_keywords_frequencies_from_article(self, content) -> dict:
+        frequencies = { keyword: 0 for keyword in self.keywords }
+        for keyword in self.keywords:
+            for word in content.split(' '):
+                if word == keyword.lower():
+                    frequencies[keyword] += 1
+        return frequencies
 
 scraper = ArticleScraper()
