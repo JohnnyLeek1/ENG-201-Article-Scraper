@@ -30,9 +30,25 @@ class ArticleScraper():
                        }
 
         self.html_parsing = {
+            'Huffington Post': {
+                'articleBody': 'section',
+                'identifiers': { 'class': 'entry__content-list js-entry-content' }
+            },
             'New York Times': {
                 'articleBody': 'section',
                 'identifiers': { 'name': 'articleBody' }
+            },
+            'Associated Press': {
+                'articleBody': 'div',
+                'identifiers': { 'class': 'Article' }
+            },
+            'Fox News': {
+                'articleBody': 'div',
+                'identifiers': { 'class': 'article-body' }
+            },
+            'Breitbart': {
+                'articleBody': 'div',
+                'identifiers': { 'class': 'entry-content' }
             }
         }
 
@@ -52,6 +68,8 @@ class ArticleScraper():
             try:
                 content = self.get_article_content(article)
                 article_frequencies = self.get_keywords_frequencies_from_article(content)
+                contexts = self.get_context_from_article(content)
+                print(article_frequencies)
             except ValueError as e:
                 print(f'\nCannot parse article {article}:')
                 print(e)
@@ -68,10 +86,10 @@ class ArticleScraper():
     def get_article_content(self, url) -> str:
         print(f'Parsing {url}...')
         source = self.get_news_source(url)
-        with requests.get(url) as article:
+        # We must specify a user agent because some sites (huffington post) reject requests with no user agent header
+        with requests.get(url, headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}) as article:
             article_content = article.content
             parsed_article = BeautifulSoup(article_content, 'html.parser')
-
             body = parsed_article.find( self.html_parsing[source]['articleBody'], self.html_parsing[source]['identifiers'] )
             paragraphs = body.find_all('p')
 
@@ -85,5 +103,15 @@ class ArticleScraper():
                 if word == keyword.lower():
                     frequencies[keyword] += 1
         return frequencies
+
+    def get_context_from_article(self, content) -> dict:
+        contexts = { keyword: [] for keyword in self.keywords }
+        for keyword in self.keywords:
+            keyword_regex = r'[^.]*' + keyword + '[^.]*\\.'
+            print(re.findall( keyword_regex , content))
+            for match in re.findall(keyword_regex, content):
+                contexts[keyword].append(match)
+
+        print(contexts)
 
 scraper = ArticleScraper()
