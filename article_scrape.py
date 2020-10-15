@@ -74,11 +74,7 @@ class ArticleScraper():
             body = parsed_article.find( self.html_parsing[source]['articleBody'], self.html_parsing[source]['identifiers'] )
             paragraphs = body.find_all('p')
 
-            article_paragraphs = []
-            for paragraph in paragraphs:
-                p = paragraph.get_text()
-                article_paragraphs.append(p)
-
+            article_paragraphs = [paragraph.get_text() for paragraph in paragraphs]
             return(" ".join(article_paragraphs))
 
     def get_keywords_frequencies_from_article(self, content) -> int:
